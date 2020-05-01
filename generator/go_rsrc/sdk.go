@@ -27,6 +27,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"golang.org/x/net/context"
 	"golang.org/x/oauth2"
@@ -238,4 +239,18 @@ func HTTPHeaderSafeJSON(b []byte) string {
 		}
 	}
 	return s.String()
+}
+
+// Date is used to format/decode the date portion of Times for JSON.
+type Date struct {
+	time.Time
+}
+
+func (d *Date) UnmarshalJSON(data []byte) (err error) {
+	d.Time, err = time.Parse("2006-01-02", string(data[1:len(data)-1]))
+	return err
+}
+
+func (d *Date) MarshalJSON() ([]byte, error) {
+	return []byte(d.Format(`"2006-01-02"`)), nil
 }
