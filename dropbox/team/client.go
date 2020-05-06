@@ -35,6 +35,18 @@ import (
 
 // Client interface describes all routes in this namespace
 type Client interface {
+	// WithNamespacePathRoot returns a new Client that sets the
+	// Dropbox-API-Path-Root header on each request set to the supplied
+	// namespace id
+	WithNamespacePathRoot(namespaceID string) Client
+	// WithNamespacePathRoot returns a new Client that sets the
+	// Dropbox-API-Path-Root header on each request set to the supplied root
+	// namespace id.
+	WithRootPathRoot(rootNamespaceID string) Client
+	// WithHomePathRoot returns a new Client that sets the Dropbox-API-Path-Root
+	// header on each request set to perform actions relative to the current
+	// user's home namespace (default behavior).
+	WithHomePathRoot() Client
 	// DevicesListMemberDevices : List all device sessions of a team's member.
 	DevicesListMemberDevices(arg *ListMemberDevicesArg) (res *ListMemberDevicesResult, err error)
 	// DevicesListMembersDevices : List all device sessions of a team.
@@ -4476,4 +4488,16 @@ func (dbx *apiImpl) TokenGetAuthenticatedAdmin() (res *TokenGetAuthenticatedAdmi
 func New(c dropbox.Config) Client {
 	ctx := apiImpl(dropbox.NewContext(c))
 	return &ctx
+}
+func (dbx *apiImpl) WithNamespacePathRoot(namespaceId string) Client {
+	ctx := (*dropbox.Context)(dbx).WithNamespacePathRoot(namespaceId)
+	return (*apiImpl)(&ctx)
+}
+func (dbx *apiImpl) WithRootPathRoot(rootNamespaceId string) Client {
+	ctx := (*dropbox.Context)(dbx).WithRootPathRoot(rootNamespaceId)
+	return (*apiImpl)(&ctx)
+}
+func (dbx *apiImpl) WithHomePathRoot() Client {
+	ctx := (*dropbox.Context)(dbx).WithHomePathRoot()
+	return (*apiImpl)(&ctx)
 }

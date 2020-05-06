@@ -32,6 +32,18 @@ import (
 
 // Client interface describes all routes in this namespace
 type Client interface {
+	// WithNamespacePathRoot returns a new Client that sets the
+	// Dropbox-API-Path-Root header on each request set to the supplied
+	// namespace id
+	WithNamespacePathRoot(namespaceID string) Client
+	// WithNamespacePathRoot returns a new Client that sets the
+	// Dropbox-API-Path-Root header on each request set to the supplied root
+	// namespace id.
+	WithRootPathRoot(rootNamespaceID string) Client
+	// WithHomePathRoot returns a new Client that sets the Dropbox-API-Path-Root
+	// header on each request set to perform actions relative to the current
+	// user's home namespace (default behavior).
+	WithHomePathRoot() Client
 	// PropertiesAdd : Add property groups to a Dropbox file. See
 	// `templatesAddForUser` or `templatesAddForTeam` to create new templates.
 	PropertiesAdd(arg *AddPropertiesArg) (err error)
@@ -124,6 +136,9 @@ func (dbx *apiImpl) PropertiesAdd(arg *AddPropertiesArg) (err error) {
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "file_properties", "properties/add", headers, bytes.NewReader(b))
 	if err != nil {
@@ -184,6 +199,9 @@ func (dbx *apiImpl) PropertiesOverwrite(arg *OverwritePropertyGroupArg) (err err
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "file_properties", "properties/overwrite", headers, bytes.NewReader(b))
@@ -246,6 +264,9 @@ func (dbx *apiImpl) PropertiesRemove(arg *RemovePropertiesArg) (err error) {
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "file_properties", "properties/remove", headers, bytes.NewReader(b))
 	if err != nil {
@@ -306,6 +327,9 @@ func (dbx *apiImpl) PropertiesSearch(arg *PropertiesSearchArg) (res *PropertiesS
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "file_properties", "properties/search", headers, bytes.NewReader(b))
@@ -373,6 +397,9 @@ func (dbx *apiImpl) PropertiesSearchContinue(arg *PropertiesSearchContinueArg) (
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "file_properties", "properties/search/continue", headers, bytes.NewReader(b))
 	if err != nil {
@@ -438,6 +465,9 @@ func (dbx *apiImpl) PropertiesUpdate(arg *UpdatePropertiesArg) (err error) {
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "file_properties", "properties/update", headers, bytes.NewReader(b))
@@ -562,6 +592,9 @@ func (dbx *apiImpl) TemplatesAddForUser(arg *AddTemplateArg) (res *AddTemplateRe
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "file_properties", "templates/add_for_user", headers, bytes.NewReader(b))
@@ -692,6 +725,9 @@ func (dbx *apiImpl) TemplatesGetForUser(arg *GetTemplateArg) (res *GetTemplateRe
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "file_properties", "templates/get_for_user", headers, bytes.NewReader(b))
 	if err != nil {
@@ -804,6 +840,9 @@ func (dbx *apiImpl) TemplatesListForUser() (res *ListTemplateResult, err error) 
 	headers := map[string]string{}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "file_properties", "templates/list_for_user", headers, nil)
@@ -929,6 +968,9 @@ func (dbx *apiImpl) TemplatesRemoveForUser(arg *RemoveTemplateArg) (err error) {
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "file_properties", "templates/remove_for_user", headers, bytes.NewReader(b))
 	if err != nil {
@@ -1053,6 +1095,9 @@ func (dbx *apiImpl) TemplatesUpdateForUser(arg *UpdateTemplateArg) (res *UpdateT
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "file_properties", "templates/update_for_user", headers, bytes.NewReader(b))
 	if err != nil {
@@ -1102,4 +1147,16 @@ func (dbx *apiImpl) TemplatesUpdateForUser(arg *UpdateTemplateArg) (res *UpdateT
 func New(c dropbox.Config) Client {
 	ctx := apiImpl(dropbox.NewContext(c))
 	return &ctx
+}
+func (dbx *apiImpl) WithNamespacePathRoot(namespaceId string) Client {
+	ctx := (*dropbox.Context)(dbx).WithNamespacePathRoot(namespaceId)
+	return (*apiImpl)(&ctx)
+}
+func (dbx *apiImpl) WithRootPathRoot(rootNamespaceId string) Client {
+	ctx := (*dropbox.Context)(dbx).WithRootPathRoot(rootNamespaceId)
+	return (*apiImpl)(&ctx)
+}
+func (dbx *apiImpl) WithHomePathRoot() Client {
+	ctx := (*dropbox.Context)(dbx).WithHomePathRoot()
+	return (*apiImpl)(&ctx)
 }

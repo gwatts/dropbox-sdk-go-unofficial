@@ -57,6 +57,8 @@ type Config struct {
 	Logger *log.Logger
 	// Used with APIs that support operations as another user
 	AsMemberID string
+	// Used with APIs that support operations using a team admin
+	AsAdminID string
 	// No need to set -- for testing only
 	Domain string
 	// No need to set -- for testing only
@@ -112,6 +114,7 @@ type Context struct {
 	Client          *http.Client
 	HeaderGenerator func(hostType string, style string, namespace string, route string) map[string]string
 	URLGenerator    func(hostType string, style string, namespace string, route string) string
+	pathRoot        string
 }
 
 // NewRequest returns an appropriate Request object for the given namespace/route.
@@ -132,6 +135,10 @@ func (c *Context) NewRequest(
 	for k, v := range headers {
 		req.Header.Add(k, v)
 	}
+	if c.pathRoot != "" {
+		req.Header["Dropbox-API-Path-Root"] = []string{c.pathRoot}
+	}
+
 	for k, v := range c.HeaderGenerator(hostType, style, namespace, route) {
 		req.Header.Add(k, v)
 	}
@@ -142,6 +149,31 @@ func (c *Context) NewRequest(
 		req.Header.Del("Authorization")
 	}
 	return req, nil
+}
+
+// WithNamespacePathRoot returns a new Context that sets the Dropbox-API-Path-Root
+// header on each request set to the supplied namespace id.
+func (c Context) WithNamespacePathRoot(namespaceId string) Context {
+	pr, _ := json.Marshal(pathRoot{Tagged: Tagged{Tag: pathRootNamespaceId}, NamespaceId: namespaceId})
+	c.pathRoot = string(pr)
+	return c
+}
+
+// WithNamespacePathRoot returns a new Context that sets the Dropbox-API-Path-Root
+// header on each request set to the supplied root namespace id.
+func (c Context) WithRootPathRoot(rootNamespaceId string) Context {
+	pr, _ := json.Marshal(pathRoot{Tagged: Tagged{Tag: pathRootRoot}, Root: rootNamespaceId})
+	c.pathRoot = string(pr)
+	return c
+}
+
+// WithHomePathRoot returns a new Context that sets the Dropbox-API-Path-Root
+// header on each request set to perform actions relative to the current user's home
+// namespace (default behavior).
+func (c Context) WithHomePathRoot() Context {
+	pr, _ := json.Marshal(pathRoot{Tagged: Tagged{Tag: pathRootHome}})
+	c.pathRoot = string(pr)
+	return c
 }
 
 // NewContext returns a new Context with the given Config.
@@ -178,7 +210,7 @@ func NewContext(c Config) Context {
 		}
 	}
 
-	return Context{c, client, headerGenerator, urlGenerator}
+	return Context{c, client, headerGenerator, urlGenerator, ""}
 }
 
 // OAuthEndpoint constructs an `oauth2.Endpoint` for the given domain
@@ -239,3 +271,24 @@ func HTTPHeaderSafeJSON(b []byte) string {
 	}
 	return s.String()
 }
+
+// pathRoot avoids a circular import of common.PathRoot
+type pathRoot struct {
+	Tagged
+	// Root : Paths are relative to the authenticating user's root namespace
+	// (This results in `PathRootError.invalid_root` if the user's root
+	// namespace has changed.).
+	Root string `json:"root,omitempty"`
+	// NamespaceId : Paths are relative to given namespace id (This results in
+	// `PathRootError.no_permission` if you don't have access to this
+	// namespace.).
+	NamespaceId string `json:"namespace_id,omitempty"`
+}
+
+// Valid tag values for pathRoot
+const (
+	pathRootHome        = "home"
+	pathRootRoot        = "root"
+	pathRootNamespaceId = "namespace_id"
+	pathRootOther       = "other"
+)

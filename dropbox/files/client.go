@@ -36,6 +36,18 @@ import (
 
 // Client interface describes all routes in this namespace
 type Client interface {
+	// WithNamespacePathRoot returns a new Client that sets the
+	// Dropbox-API-Path-Root header on each request set to the supplied
+	// namespace id
+	WithNamespacePathRoot(namespaceID string) Client
+	// WithNamespacePathRoot returns a new Client that sets the
+	// Dropbox-API-Path-Root header on each request set to the supplied root
+	// namespace id.
+	WithRootPathRoot(rootNamespaceID string) Client
+	// WithHomePathRoot returns a new Client that sets the Dropbox-API-Path-Root
+	// header on each request set to perform actions relative to the current
+	// user's home namespace (default behavior).
+	WithHomePathRoot() Client
 	// AlphaGetMetadata : Returns the metadata for a file or folder. This is an
 	// alpha endpoint compatible with the properties API. Note: Metadata for the
 	// root folder is unsupported.
@@ -405,6 +417,9 @@ func (dbx *apiImpl) AlphaGetMetadata(arg *AlphaGetMetadataArg) (res IsMetadata, 
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "alpha/get_metadata", headers, bytes.NewReader(b))
 	if err != nil {
@@ -486,6 +501,9 @@ func (dbx *apiImpl) AlphaUpload(arg *CommitInfoWithProperties, content io.Reader
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("content", "upload", true, "files", "alpha/upload", headers, content)
 	if err != nil {
@@ -551,6 +569,9 @@ func (dbx *apiImpl) CopyV2(arg *RelocationArg) (res *RelocationResult, err error
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "copy_v2", headers, bytes.NewReader(b))
@@ -620,6 +641,9 @@ func (dbx *apiImpl) Copy(arg *RelocationArg) (res IsMetadata, err error) {
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "copy", headers, bytes.NewReader(b))
@@ -698,6 +722,9 @@ func (dbx *apiImpl) CopyBatchV2(arg *RelocationBatchArgBase) (res *RelocationBat
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "copy_batch_v2", headers, bytes.NewReader(b))
 	if err != nil {
@@ -767,6 +794,9 @@ func (dbx *apiImpl) CopyBatch(arg *RelocationBatchArg) (res *RelocationBatchLaun
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "copy_batch", headers, bytes.NewReader(b))
 	if err != nil {
@@ -832,6 +862,9 @@ func (dbx *apiImpl) CopyBatchCheckV2(arg *async.PollArg) (res *RelocationBatchV2
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "copy_batch/check_v2", headers, bytes.NewReader(b))
@@ -902,6 +935,9 @@ func (dbx *apiImpl) CopyBatchCheck(arg *async.PollArg) (res *RelocationBatchJobS
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "copy_batch/check", headers, bytes.NewReader(b))
 	if err != nil {
@@ -967,6 +1003,9 @@ func (dbx *apiImpl) CopyReferenceGet(arg *GetCopyReferenceArg) (res *GetCopyRefe
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "copy_reference/get", headers, bytes.NewReader(b))
@@ -1034,6 +1073,9 @@ func (dbx *apiImpl) CopyReferenceSave(arg *SaveCopyReferenceArg) (res *SaveCopyR
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "copy_reference/save", headers, bytes.NewReader(b))
 	if err != nil {
@@ -1099,6 +1141,9 @@ func (dbx *apiImpl) CreateFolderV2(arg *CreateFolderArg) (res *CreateFolderResul
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "create_folder_v2", headers, bytes.NewReader(b))
@@ -1169,6 +1214,9 @@ func (dbx *apiImpl) CreateFolder(arg *CreateFolderArg) (res *FolderMetadata, err
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "create_folder", headers, bytes.NewReader(b))
 	if err != nil {
@@ -1234,6 +1282,9 @@ func (dbx *apiImpl) CreateFolderBatch(arg *CreateFolderBatchArg) (res *CreateFol
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "create_folder_batch", headers, bytes.NewReader(b))
@@ -1301,6 +1352,9 @@ func (dbx *apiImpl) CreateFolderBatchCheck(arg *async.PollArg) (res *CreateFolde
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "create_folder_batch/check", headers, bytes.NewReader(b))
 	if err != nil {
@@ -1366,6 +1420,9 @@ func (dbx *apiImpl) DeleteV2(arg *DeleteArg) (res *DeleteResult, err error) {
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "delete_v2", headers, bytes.NewReader(b))
@@ -1435,6 +1492,9 @@ func (dbx *apiImpl) Delete(arg *DeleteArg) (res IsMetadata, err error) {
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "delete", headers, bytes.NewReader(b))
@@ -1513,6 +1573,9 @@ func (dbx *apiImpl) DeleteBatch(arg *DeleteBatchArg) (res *DeleteBatchLaunch, er
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "delete_batch", headers, bytes.NewReader(b))
 	if err != nil {
@@ -1578,6 +1641,9 @@ func (dbx *apiImpl) DeleteBatchCheck(arg *async.PollArg) (res *DeleteBatchJobSta
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "delete_batch/check", headers, bytes.NewReader(b))
@@ -1648,6 +1714,9 @@ func (dbx *apiImpl) Download(arg *DownloadArg) (res *FileMetadata, content io.Re
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("content", "download", true, "files", "download", headers, nil)
 	if err != nil {
@@ -1714,6 +1783,9 @@ func (dbx *apiImpl) DownloadZip(arg *DownloadZipArg) (res *DownloadZipResult, co
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("content", "download", true, "files", "download_zip", headers, nil)
@@ -1782,6 +1854,9 @@ func (dbx *apiImpl) Export(arg *ExportArg) (res *ExportResult, content io.ReadCl
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("content", "download", true, "files", "export", headers, nil)
 	if err != nil {
@@ -1848,6 +1923,9 @@ func (dbx *apiImpl) GetMetadata(arg *GetMetadataArg) (res IsMetadata, err error)
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "get_metadata", headers, bytes.NewReader(b))
@@ -1926,6 +2004,9 @@ func (dbx *apiImpl) GetPreview(arg *PreviewArg) (res *FileMetadata, content io.R
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("content", "download", true, "files", "get_preview", headers, nil)
 	if err != nil {
@@ -1993,6 +2074,9 @@ func (dbx *apiImpl) GetTemporaryLink(arg *GetTemporaryLinkArg) (res *GetTemporar
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "get_temporary_link", headers, bytes.NewReader(b))
 	if err != nil {
@@ -2059,6 +2143,9 @@ func (dbx *apiImpl) GetTemporaryUploadLink(arg *GetTemporaryUploadLinkArg) (res 
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "get_temporary_upload_link", headers, bytes.NewReader(b))
 	if err != nil {
@@ -2124,6 +2211,9 @@ func (dbx *apiImpl) GetThumbnail(arg *ThumbnailArg) (res *FileMetadata, content 
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("content", "download", true, "files", "get_thumbnail", headers, nil)
@@ -2192,6 +2282,9 @@ func (dbx *apiImpl) GetThumbnailBatch(arg *GetThumbnailBatchArg) (res *GetThumbn
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("content", "rpc", true, "files", "get_thumbnail_batch", headers, nil)
 	if err != nil {
@@ -2257,6 +2350,9 @@ func (dbx *apiImpl) ListFolder(arg *ListFolderArg) (res *ListFolderResult, err e
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "list_folder", headers, bytes.NewReader(b))
@@ -2324,6 +2420,9 @@ func (dbx *apiImpl) ListFolderContinue(arg *ListFolderContinueArg) (res *ListFol
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "list_folder/continue", headers, bytes.NewReader(b))
 	if err != nil {
@@ -2389,6 +2488,9 @@ func (dbx *apiImpl) ListFolderGetLatestCursor(arg *ListFolderArg) (res *ListFold
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "list_folder/get_latest_cursor", headers, bytes.NewReader(b))
@@ -2519,6 +2621,9 @@ func (dbx *apiImpl) ListRevisions(arg *ListRevisionsArg) (res *ListRevisionsResu
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "list_revisions", headers, bytes.NewReader(b))
 	if err != nil {
@@ -2584,6 +2689,9 @@ func (dbx *apiImpl) MoveV2(arg *RelocationArg) (res *RelocationResult, err error
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "move_v2", headers, bytes.NewReader(b))
@@ -2653,6 +2761,9 @@ func (dbx *apiImpl) Move(arg *RelocationArg) (res IsMetadata, err error) {
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "move", headers, bytes.NewReader(b))
@@ -2731,6 +2842,9 @@ func (dbx *apiImpl) MoveBatchV2(arg *MoveBatchArg) (res *RelocationBatchV2Launch
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "move_batch_v2", headers, bytes.NewReader(b))
 	if err != nil {
@@ -2796,6 +2910,9 @@ func (dbx *apiImpl) MoveBatch(arg *RelocationBatchArg) (res *RelocationBatchLaun
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "move_batch", headers, bytes.NewReader(b))
@@ -2863,6 +2980,9 @@ func (dbx *apiImpl) MoveBatchCheckV2(arg *async.PollArg) (res *RelocationBatchV2
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "move_batch/check_v2", headers, bytes.NewReader(b))
 	if err != nil {
@@ -2928,6 +3048,9 @@ func (dbx *apiImpl) MoveBatchCheck(arg *async.PollArg) (res *RelocationBatchJobS
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "move_batch/check", headers, bytes.NewReader(b))
@@ -2995,6 +3118,9 @@ func (dbx *apiImpl) PermanentlyDelete(arg *DeleteArg) (err error) {
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "permanently_delete", headers, bytes.NewReader(b))
 	if err != nil {
@@ -3057,6 +3183,9 @@ func (dbx *apiImpl) PropertiesAdd(arg *file_properties.AddPropertiesArg) (err er
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "properties/add", headers, bytes.NewReader(b))
@@ -3121,6 +3250,9 @@ func (dbx *apiImpl) PropertiesOverwrite(arg *file_properties.OverwritePropertyGr
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "properties/overwrite", headers, bytes.NewReader(b))
 	if err != nil {
@@ -3183,6 +3315,9 @@ func (dbx *apiImpl) PropertiesRemove(arg *file_properties.RemovePropertiesArg) (
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "properties/remove", headers, bytes.NewReader(b))
@@ -3247,6 +3382,9 @@ func (dbx *apiImpl) PropertiesTemplateGet(arg *file_properties.GetTemplateArg) (
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "properties/template/get", headers, bytes.NewReader(b))
 	if err != nil {
@@ -3306,6 +3444,9 @@ func (dbx *apiImpl) PropertiesTemplateList() (res *file_properties.ListTemplateR
 	headers := map[string]string{}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "properties/template/list", headers, nil)
@@ -3375,6 +3516,9 @@ func (dbx *apiImpl) PropertiesUpdate(arg *file_properties.UpdatePropertiesArg) (
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "properties/update", headers, bytes.NewReader(b))
 	if err != nil {
@@ -3435,6 +3579,9 @@ func (dbx *apiImpl) Restore(arg *RestoreArg) (res *FileMetadata, err error) {
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "restore", headers, bytes.NewReader(b))
@@ -3502,6 +3649,9 @@ func (dbx *apiImpl) SaveUrl(arg *SaveUrlArg) (res *SaveUrlResult, err error) {
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "save_url", headers, bytes.NewReader(b))
 	if err != nil {
@@ -3568,6 +3718,9 @@ func (dbx *apiImpl) SaveUrlCheckJobStatus(arg *async.PollArg) (res *SaveUrlJobSt
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "save_url/check_job_status", headers, bytes.NewReader(b))
 	if err != nil {
@@ -3633,6 +3786,9 @@ func (dbx *apiImpl) Search(arg *SearchArg) (res *SearchResult, err error) {
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "search", headers, bytes.NewReader(b))
@@ -3701,6 +3857,9 @@ func (dbx *apiImpl) Upload(arg *CommitInfo, content io.Reader) (res *FileMetadat
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("content", "upload", true, "files", "upload", headers, content)
 	if err != nil {
@@ -3768,6 +3927,9 @@ func (dbx *apiImpl) UploadSessionAppendV2(arg *UploadSessionAppendArg, content i
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("content", "upload", true, "files", "upload_session/append_v2", headers, content)
 	if err != nil {
@@ -3833,6 +3995,9 @@ func (dbx *apiImpl) UploadSessionAppend(arg *UploadSessionCursor, content io.Rea
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("content", "upload", true, "files", "upload_session/append", headers, content)
 	if err != nil {
@@ -3894,6 +4059,9 @@ func (dbx *apiImpl) UploadSessionFinish(arg *UploadSessionFinishArg, content io.
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("content", "upload", true, "files", "upload_session/finish", headers, content)
@@ -3961,6 +4129,9 @@ func (dbx *apiImpl) UploadSessionFinishBatch(arg *UploadSessionFinishBatchArg) (
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "upload_session/finish_batch", headers, bytes.NewReader(b))
 	if err != nil {
@@ -4026,6 +4197,9 @@ func (dbx *apiImpl) UploadSessionFinishBatchCheck(arg *async.PollArg) (res *Uplo
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "files", "upload_session/finish_batch/check", headers, bytes.NewReader(b))
@@ -4094,6 +4268,9 @@ func (dbx *apiImpl) UploadSessionStart(arg *UploadSessionStartArg, content io.Re
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("content", "upload", true, "files", "upload_session/start", headers, content)
 	if err != nil {
@@ -4143,4 +4320,16 @@ func (dbx *apiImpl) UploadSessionStart(arg *UploadSessionStartArg, content io.Re
 func New(c dropbox.Config) Client {
 	ctx := apiImpl(dropbox.NewContext(c))
 	return &ctx
+}
+func (dbx *apiImpl) WithNamespacePathRoot(namespaceId string) Client {
+	ctx := (*dropbox.Context)(dbx).WithNamespacePathRoot(namespaceId)
+	return (*apiImpl)(&ctx)
+}
+func (dbx *apiImpl) WithRootPathRoot(rootNamespaceId string) Client {
+	ctx := (*dropbox.Context)(dbx).WithRootPathRoot(rootNamespaceId)
+	return (*apiImpl)(&ctx)
+}
+func (dbx *apiImpl) WithHomePathRoot() Client {
+	ctx := (*dropbox.Context)(dbx).WithHomePathRoot()
+	return (*apiImpl)(&ctx)
 }

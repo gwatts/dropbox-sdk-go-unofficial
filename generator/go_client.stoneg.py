@@ -31,6 +31,16 @@ class GoClientBackend(CodeBackend):
 
             self.emit('// Client interface describes all routes in this namespace')
             with self.block('type Client interface'):
+                self.emit_wrapped_text('WithNamespacePathRoot returns a new Client that sets the '
+                    'Dropbox-API-Path-Root header on each request set to the supplied namespace id', '// ')
+                self.emit('WithNamespacePathRoot(namespaceID string) Client')
+                self.emit_wrapped_text('WithNamespacePathRoot returns a new Client that sets the '
+                    'Dropbox-API-Path-Root header on each request set to the supplied root namespace id.', '// ')
+                self.emit('WithRootPathRoot(rootNamespaceID string) Client')
+                self.emit_wrapped_text('WithHomePathRoot returns a new Client that sets the '
+                    'Dropbox-API-Path-Root header on each request set to perform actions '
+                    'relative to the current user\'s home namespace (default behavior).', '// ')
+                self.emit('WithHomePathRoot() Client')
                 for route in namespace.routes:
                     generate_doc(self, route)
                     self.emit(self._generate_route_signature(namespace, route))
@@ -43,6 +53,15 @@ class GoClientBackend(CodeBackend):
             with self.block('func New(c dropbox.Config) Client'):
                 self.emit('ctx := apiImpl(dropbox.NewContext(c))')
                 self.emit('return &ctx')
+            with self.block('func (dbx *apiImpl) WithNamespacePathRoot(namespaceId string) Client'):
+                self.emit('ctx := (*dropbox.Context)(dbx).WithNamespacePathRoot(namespaceId)')
+                self.emit('return (*apiImpl)(&ctx)')
+            with self.block('func (dbx *apiImpl) WithRootPathRoot(rootNamespaceId string) Client'):
+                self.emit('ctx := (*dropbox.Context)(dbx).WithRootPathRoot(rootNamespaceId)')
+                self.emit('return (*apiImpl)(&ctx)')
+            with self.block('func (dbx *apiImpl) WithHomePathRoot() Client'):
+                self.emit('ctx := (*dropbox.Context)(dbx).WithHomePathRoot()')
+                self.emit('return (*apiImpl)(&ctx)')
 
     def _generate_route_signature(self, namespace, route):
         req = fmt_type(route.arg_data_type, namespace)
@@ -140,6 +159,8 @@ class GoClientBackend(CodeBackend):
         if auth != 'noauth' and auth != 'team':
             with self.block('if dbx.Config.AsMemberID != ""'):
                 out('headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID')
+            with self.block('if dbx.Config.AsAdminID != ""'):
+                out('headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID')
         out()
 
         fn = route.name
