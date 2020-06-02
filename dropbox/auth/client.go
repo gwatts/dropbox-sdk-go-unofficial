@@ -31,6 +31,18 @@ import (
 
 // Client interface describes all routes in this namespace
 type Client interface {
+	// WithNamespacePathRoot returns a new Client that sets the
+	// Dropbox-API-Path-Root header on each request set to the supplied
+	// namespace id
+	WithNamespacePathRoot(namespaceID string) Client
+	// WithNamespacePathRoot returns a new Client that sets the
+	// Dropbox-API-Path-Root header on each request set to the supplied root
+	// namespace id.
+	WithRootPathRoot(rootNamespaceID string) Client
+	// WithHomePathRoot returns a new Client that sets the Dropbox-API-Path-Root
+	// header on each request set to perform actions relative to the current
+	// user's home namespace (default behavior).
+	WithHomePathRoot() Client
 	// TokenFromOauth1 : Creates an OAuth 2.0 access token from the supplied
 	// OAuth 1.0 access token.
 	TokenFromOauth1(arg *TokenFromOAuth1Arg) (res *TokenFromOAuth1Result, err error)
@@ -60,6 +72,9 @@ func (dbx *apiImpl) TokenFromOauth1(arg *TokenFromOAuth1Arg) (res *TokenFromOAut
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "auth", "token/from_oauth1", headers, bytes.NewReader(b))
@@ -119,6 +134,9 @@ func (dbx *apiImpl) TokenRevoke() (err error) {
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "auth", "token/revoke", headers, nil)
 	if err != nil {
@@ -163,4 +181,16 @@ func (dbx *apiImpl) TokenRevoke() (err error) {
 func New(c dropbox.Config) Client {
 	ctx := apiImpl(dropbox.NewContext(c))
 	return &ctx
+}
+func (dbx *apiImpl) WithNamespacePathRoot(namespaceId string) Client {
+	ctx := (*dropbox.Context)(dbx).WithNamespacePathRoot(namespaceId)
+	return (*apiImpl)(&ctx)
+}
+func (dbx *apiImpl) WithRootPathRoot(rootNamespaceId string) Client {
+	ctx := (*dropbox.Context)(dbx).WithRootPathRoot(rootNamespaceId)
+	return (*apiImpl)(&ctx)
+}
+func (dbx *apiImpl) WithHomePathRoot() Client {
+	ctx := (*dropbox.Context)(dbx).WithHomePathRoot()
+	return (*apiImpl)(&ctx)
 }

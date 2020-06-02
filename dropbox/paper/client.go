@@ -33,6 +33,18 @@ import (
 
 // Client interface describes all routes in this namespace
 type Client interface {
+	// WithNamespacePathRoot returns a new Client that sets the
+	// Dropbox-API-Path-Root header on each request set to the supplied
+	// namespace id
+	WithNamespacePathRoot(namespaceID string) Client
+	// WithNamespacePathRoot returns a new Client that sets the
+	// Dropbox-API-Path-Root header on each request set to the supplied root
+	// namespace id.
+	WithRootPathRoot(rootNamespaceID string) Client
+	// WithHomePathRoot returns a new Client that sets the Dropbox-API-Path-Root
+	// header on each request set to perform actions relative to the current
+	// user's home namespace (default behavior).
+	WithHomePathRoot() Client
 	// DocsArchive : Marks the given Paper doc as archived. Note: This action
 	// can be performed or undone by anyone with edit permissions to the doc.
 	DocsArchive(arg *RefPaperDoc) (err error)
@@ -121,6 +133,9 @@ func (dbx *apiImpl) DocsArchive(arg *RefPaperDoc) (err error) {
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "paper", "docs/archive", headers, bytes.NewReader(b))
 	if err != nil {
@@ -182,6 +197,9 @@ func (dbx *apiImpl) DocsCreate(arg *PaperDocCreateArgs, content io.Reader) (res 
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "upload", true, "paper", "docs/create", headers, content)
@@ -248,6 +266,9 @@ func (dbx *apiImpl) DocsDownload(arg *PaperDocExport) (res *PaperDocExportResult
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "download", true, "paper", "docs/download", headers, bytes.NewReader(b))
@@ -316,6 +337,9 @@ func (dbx *apiImpl) DocsFolderUsersList(arg *ListUsersOnFolderArgs) (res *ListUs
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "paper", "docs/folder_users/list", headers, bytes.NewReader(b))
 	if err != nil {
@@ -381,6 +405,9 @@ func (dbx *apiImpl) DocsFolderUsersListContinue(arg *ListUsersOnFolderContinueAr
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "paper", "docs/folder_users/list/continue", headers, bytes.NewReader(b))
@@ -448,6 +475,9 @@ func (dbx *apiImpl) DocsGetFolderInfo(arg *RefPaperDoc) (res *FoldersContainingP
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "paper", "docs/get_folder_info", headers, bytes.NewReader(b))
 	if err != nil {
@@ -513,6 +543,9 @@ func (dbx *apiImpl) DocsList(arg *ListPaperDocsArgs) (res *ListPaperDocsResponse
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "paper", "docs/list", headers, bytes.NewReader(b))
@@ -580,6 +613,9 @@ func (dbx *apiImpl) DocsListContinue(arg *ListPaperDocsContinueArgs) (res *ListP
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "paper", "docs/list/continue", headers, bytes.NewReader(b))
 	if err != nil {
@@ -646,6 +682,9 @@ func (dbx *apiImpl) DocsPermanentlyDelete(arg *RefPaperDoc) (err error) {
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "paper", "docs/permanently_delete", headers, bytes.NewReader(b))
 	if err != nil {
@@ -706,6 +745,9 @@ func (dbx *apiImpl) DocsSharingPolicyGet(arg *RefPaperDoc) (res *SharingPolicy, 
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "paper", "docs/sharing_policy/get", headers, bytes.NewReader(b))
@@ -773,6 +815,9 @@ func (dbx *apiImpl) DocsSharingPolicySet(arg *PaperDocSharingPolicy) (err error)
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "paper", "docs/sharing_policy/set", headers, bytes.NewReader(b))
 	if err != nil {
@@ -834,6 +879,9 @@ func (dbx *apiImpl) DocsUpdate(arg *PaperDocUpdateArgs, content io.Reader) (res 
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "upload", true, "paper", "docs/update", headers, content)
@@ -901,6 +949,9 @@ func (dbx *apiImpl) DocsUsersAdd(arg *AddPaperDocUser) (res []*AddPaperDocUserMe
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "paper", "docs/users/add", headers, bytes.NewReader(b))
 	if err != nil {
@@ -966,6 +1017,9 @@ func (dbx *apiImpl) DocsUsersList(arg *ListUsersOnPaperDocArgs) (res *ListUsersO
 	}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "paper", "docs/users/list", headers, bytes.NewReader(b))
@@ -1033,6 +1087,9 @@ func (dbx *apiImpl) DocsUsersListContinue(arg *ListUsersOnPaperDocContinueArgs) 
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "paper", "docs/users/list/continue", headers, bytes.NewReader(b))
 	if err != nil {
@@ -1099,6 +1156,9 @@ func (dbx *apiImpl) DocsUsersRemove(arg *RemovePaperDocUser) (err error) {
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "paper", "docs/users/remove", headers, bytes.NewReader(b))
 	if err != nil {
@@ -1143,4 +1203,16 @@ func (dbx *apiImpl) DocsUsersRemove(arg *RemovePaperDocUser) (err error) {
 func New(c dropbox.Config) Client {
 	ctx := apiImpl(dropbox.NewContext(c))
 	return &ctx
+}
+func (dbx *apiImpl) WithNamespacePathRoot(namespaceId string) Client {
+	ctx := (*dropbox.Context)(dbx).WithNamespacePathRoot(namespaceId)
+	return (*apiImpl)(&ctx)
+}
+func (dbx *apiImpl) WithRootPathRoot(rootNamespaceId string) Client {
+	ctx := (*dropbox.Context)(dbx).WithRootPathRoot(rootNamespaceId)
+	return (*apiImpl)(&ctx)
+}
+func (dbx *apiImpl) WithHomePathRoot() Client {
+	ctx := (*dropbox.Context)(dbx).WithHomePathRoot()
+	return (*apiImpl)(&ctx)
 }

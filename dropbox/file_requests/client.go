@@ -32,6 +32,18 @@ import (
 
 // Client interface describes all routes in this namespace
 type Client interface {
+	// WithNamespacePathRoot returns a new Client that sets the
+	// Dropbox-API-Path-Root header on each request set to the supplied
+	// namespace id
+	WithNamespacePathRoot(namespaceID string) Client
+	// WithNamespacePathRoot returns a new Client that sets the
+	// Dropbox-API-Path-Root header on each request set to the supplied root
+	// namespace id.
+	WithRootPathRoot(rootNamespaceID string) Client
+	// WithHomePathRoot returns a new Client that sets the Dropbox-API-Path-Root
+	// header on each request set to perform actions relative to the current
+	// user's home namespace (default behavior).
+	WithHomePathRoot() Client
 	// Count : Returns the total number of file requests owned by this user.
 	// Includes both open and closed file requests.
 	Count() (res *CountFileRequestsResult, err error)
@@ -73,6 +85,9 @@ func (dbx *apiImpl) Count() (res *CountFileRequestsResult, err error) {
 	headers := map[string]string{}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "file_requests", "count", headers, nil)
@@ -140,6 +155,9 @@ func (dbx *apiImpl) Create(arg *CreateFileRequestArgs) (res *FileRequest, err er
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "file_requests", "create", headers, bytes.NewReader(b))
 	if err != nil {
@@ -206,6 +224,9 @@ func (dbx *apiImpl) Delete(arg *DeleteFileRequestArgs) (res *DeleteFileRequestsR
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "file_requests", "delete", headers, bytes.NewReader(b))
 	if err != nil {
@@ -263,6 +284,9 @@ func (dbx *apiImpl) DeleteAllClosed() (res *DeleteAllClosedFileRequestsResult, e
 	headers := map[string]string{}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "file_requests", "delete_all_closed", headers, nil)
@@ -330,6 +354,9 @@ func (dbx *apiImpl) Get(arg *GetFileRequestArgs) (res *FileRequest, err error) {
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "file_requests", "get", headers, bytes.NewReader(b))
 	if err != nil {
@@ -396,6 +423,9 @@ func (dbx *apiImpl) ListV2(arg *ListFileRequestsArg) (res *ListFileRequestsV2Res
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "file_requests", "list_v2", headers, bytes.NewReader(b))
 	if err != nil {
@@ -453,6 +483,9 @@ func (dbx *apiImpl) List() (res *ListFileRequestsResult, err error) {
 	headers := map[string]string{}
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
+	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
 	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "file_requests", "list", headers, nil)
@@ -520,6 +553,9 @@ func (dbx *apiImpl) ListContinue(arg *ListFileRequestsContinueArg) (res *ListFil
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "file_requests", "list/continue", headers, bytes.NewReader(b))
 	if err != nil {
@@ -586,6 +622,9 @@ func (dbx *apiImpl) Update(arg *UpdateFileRequestArgs) (res *FileRequest, err er
 	if dbx.Config.AsMemberID != "" {
 		headers["Dropbox-API-Select-User"] = dbx.Config.AsMemberID
 	}
+	if dbx.Config.AsAdminID != "" {
+		headers["Dropbox-API-Select-Admin"] = dbx.Config.AsAdminID
+	}
 
 	req, err := (*dropbox.Context)(dbx).NewRequest("api", "rpc", true, "file_requests", "update", headers, bytes.NewReader(b))
 	if err != nil {
@@ -635,4 +674,16 @@ func (dbx *apiImpl) Update(arg *UpdateFileRequestArgs) (res *FileRequest, err er
 func New(c dropbox.Config) Client {
 	ctx := apiImpl(dropbox.NewContext(c))
 	return &ctx
+}
+func (dbx *apiImpl) WithNamespacePathRoot(namespaceId string) Client {
+	ctx := (*dropbox.Context)(dbx).WithNamespacePathRoot(namespaceId)
+	return (*apiImpl)(&ctx)
+}
+func (dbx *apiImpl) WithRootPathRoot(rootNamespaceId string) Client {
+	ctx := (*dropbox.Context)(dbx).WithRootPathRoot(rootNamespaceId)
+	return (*apiImpl)(&ctx)
+}
+func (dbx *apiImpl) WithHomePathRoot() Client {
+	ctx := (*dropbox.Context)(dbx).WithHomePathRoot()
+	return (*apiImpl)(&ctx)
 }
