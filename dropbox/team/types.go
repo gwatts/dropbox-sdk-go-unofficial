@@ -261,9 +261,9 @@ func NewCustomQuotaUsersArg(Users []*UserSelectorArg) *CustomQuotaUsersArg {
 // DateRange : Input arguments that can be provided for most reports.
 type DateRange struct {
 	// StartDate : Optional starting date (inclusive).
-	StartDate time.Time `json:"start_date,omitempty"`
+	StartDate *dropbox.Date `json:"start_date,omitempty"`
 	// EndDate : Optional ending date (exclusive).
-	EndDate time.Time `json:"end_date,omitempty"`
+	EndDate *dropbox.Date `json:"end_date,omitempty"`
 }
 
 // NewDateRange returns a new DateRange instance

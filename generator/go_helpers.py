@@ -13,6 +13,7 @@ from stone.ir import (
     is_composite_type,
     is_list_type,
     is_struct_type,
+    is_timestamp_type,
     Void,
 )
 from stone.backends import helpers
@@ -76,6 +77,9 @@ def fmt_type(data_type, namespace=None, use_interface=False, raw=False):
         return '[]%s' % fmt_type(data_type.data_type, namespace, use_interface, raw)
     if raw:
         return "json.RawMessage"
+    if is_timestamp_type(data_type) and data_type.format == '%Y-%m-%d':
+        return '*dropbox.Date'
+
     type_name = data_type.name
     if use_interface and _needs_base_type(data_type):
         type_name = 'Is' + type_name
